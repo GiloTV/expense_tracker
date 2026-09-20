@@ -70,7 +70,7 @@ def add_expense():
         except ValueError:
             print("Invalid amount. Please type a number")
 
-    new_expense = (date, category, description, amount)
+    new_expense = (expense_date, category, description, amount)
     
     insert_expense(new_expense)
 
