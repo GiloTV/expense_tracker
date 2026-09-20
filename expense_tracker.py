@@ -1,7 +1,44 @@
 from datetime import datetime
+import sqlite3
 
-def expense_data():
-    date = datetime.today().strftime('%Y-%m-%d')
+def create_database():
+    db = sqlite3.connect("expenses.db")
+    cur = db.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            expense_date VARCHAR NOT NULL,
+            category VARCHAR NOT NULL,
+            description TEXT NOT NULL,
+            amount INTEGER NOT NULL
+        )
+    """)
+    
+ 
+    db.close()
+
+def insert_expense(data):
+    db = sqlite3.connect("expenses.db")
+    cur = db.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO expenses(
+            expense_date,
+            category,
+            description,
+            amount
+        )
+        VALUES (?, ?, ?, ?)
+    """,
+    data
+    )
+    db.commit()
+    db.close()
+
+def add_expense():
+    expense_date = datetime.today().strftime('%Y-%m-%d')
     category = ''
     while not category:
         category = input("""
@@ -23,7 +60,7 @@ def expense_data():
             case _:
                 category = ''
                 print('No category selected. Try again')
-    description = input("Add a little description about the expense")
+    description = input("Add a little description about the expense\n")
 
     while True:
         amount = input("Insert the amount of the expense")
@@ -34,8 +71,10 @@ def expense_data():
             print("Invalid amount. Please type a number")
 
     new_expense = (date, category, description, amount)
-    print(type(new_expense))
-    print("expense details", new_expense)
+    
+    insert_expense(new_expense)
+
+create_database()
 
 while True:
     opt = input(f"""
@@ -51,7 +90,7 @@ while True:
     match opt:
         case '1':
             print("Add new expense:")
-            expense_data()
+            add_expense()
         case '2':
             print("Modify an expense")
              
