@@ -5,6 +5,7 @@ def create_database():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
 
+    # Expense table definition. Stores expenses id, the expense date, expense category, description and amount of the stored expenses 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,8 +15,7 @@ def create_database():
             amount INTEGER NOT NULL
         )
     """)
-    
- 
+
     db.close()
 
 def insert_expense(data):
@@ -58,12 +58,17 @@ def add_expense():
                 category = 'Hobby' 
             case _:
                 print('No category selected. Try again')
-    description = input("Add a little description about the expense\n")
+                category = ''
+
+    description = input("Add a little description about the expense: ")
 
     while True:
-        amount = input("Insert the amount of the expense")
+        amount = input("Insert the amount of the expense: ")
         try:
             amount = int(amount)
+            if amount <= 0:
+                print("Insert amount again. Amount must be higher than 0")
+                continue
             break
         except ValueError:
             print("Invalid amount. Please type a number")
@@ -107,14 +112,17 @@ def calculate_total_spent():
 def modify_expense():
     show_all_expenses()
     while True:
-        expense_id = input("Insert the expense ID that will be modified")
+        expense_id = input("Insert the expense ID that will be modified: ")
         try:
             expense_id = int(expense_id)
             if expense_id <= 0:
                 print("Expense id not valid, ID's must be higher than 0 and positive numbers")
+                continue
             break
         except ValueError:
                     print("Invalid amount. Please type a number")
+
+
     
     while True:
         modify_option = input(f"""
