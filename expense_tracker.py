@@ -2,7 +2,7 @@ from datetime import datetime
 import sqlite3
 
 def create_database():
-    db = sqlite3.connect("expenses.db")
+    db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
 
     cur.execute("""
@@ -19,9 +19,8 @@ def create_database():
     db.close()
 
 def insert_expense(data):
-    db = sqlite3.connect("expenses.db")
-    cur = db.cursor()
-
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor() 
     cur.execute(
         """
         INSERT INTO expenses(
@@ -71,8 +70,42 @@ def add_expense():
             print("Invalid amount. Please type a number")
 
     new_expense = (expense_date, category, description, amount)
-    
     insert_expense(new_expense)
+
+def show_all_expenses():
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    res = cur.execute(
+        """
+        SELECT * FROM expenses
+    """)
+    expenses = res.fetchall()
+    for expense_id, expense_date, category, description, amount in expenses:
+        print(f"""
+        {'='*25} 
+        Expense details
+        expense: {expense_id}
+        expense date: {expense_date}
+        category: {category}
+        description: {description}
+        amount: {amount}
+        {'='*25}""")
+
+    db.close()
+
+def calculate_total_spent():
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    res = cur.execute("""
+        SELECT amount FROM expenses
+        """)
+
+    amounts = res.fetchall()
+    total = 0
+    for amount in amounts:
+        total += amount[0]
+
+    print(total)
 
 create_database()
 
@@ -96,10 +129,10 @@ while True:
              
         case '3': 
             print("Show all expenses")
-            
+            show_all_expenses()
         case '4':
-            print("Show total expense")
-
+            print("Show total spent")
+            calculate_total_spent()
         case '5':
             print('Option number 5, Goodbye')
             break
