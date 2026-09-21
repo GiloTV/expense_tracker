@@ -57,7 +57,6 @@ def add_expense():
             case '4':
                 category = 'Hobby' 
             case _:
-                category = ''
                 print('No category selected. Try again')
     description = input("Add a little description about the expense\n")
 
@@ -96,9 +95,7 @@ def show_all_expenses():
 def calculate_total_spent():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
-    res = cur.execute("""
-        SELECT amount FROM expenses
-        """)
+    res = cur.execute("SELECT amount FROM expenses")
 
     amounts = res.fetchall()
     total = 0
@@ -106,6 +103,107 @@ def calculate_total_spent():
         total += amount[0]
 
     print(total)
+
+def modify_expense():
+    show_all_expenses()
+    while True:
+        expense_id = input("Insert the expense ID that will be modified")
+        try:
+            expense_id = int(expense_id)
+            if expense_id <= 0:
+                print("Expense id not valid, ID's must be higher than 0 and positive numbers")
+            break
+        except ValueError:
+                    print("Invalid amount. Please type a number")
+    
+    while True:
+        modify_option = input(f"""
+        {'*' * 30}
+        1. Modify date
+        2. Modify category
+        3. Modify description
+        4. Modify amount
+        5. Exit
+        {'*' * 30}
+        """).strip()
+        match modify_option:
+            case '1':
+                print("Modify date")
+                modify_date(expense_id)
+            case '2':
+                print("Modify category")
+                modify_category(expense_id)
+            case '3':
+                print("Modify description")
+            case '4':
+                print("Modify amount")
+            case '5':
+                print("Back to main menu")
+                break
+            case _:
+                print("Try again")
+
+def modify_date(expense_id):
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    current_date = datetime.today().strftime('%Y-%m-%d')
+    cur.execute("UPDATE expenses SET expense_date = ? WHERE id = ?", (current_date, expense_id))
+    print("Date was updated succesfully")
+    
+    db.commit()
+    db.close()
+
+def modify_category(expense_id):
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    new_category = ''
+    # Categories menu option to modify the category of a expense
+    while not new_category:
+        new_category = input("""
+            Insert the new category for the expense
+            1.- Service
+            2.- Food
+            3.- Emergency
+            4.- Hobby
+        """)
+        match new_category:
+            case '1':
+                new_category = 'Service'
+            case '2':
+                new_category = 'Food'
+            case '3':
+                new_category = 'Emergency'
+            case '4':
+                new_category = 'Hobby' 
+            case _:
+                print('No category selected. Try again')
+
+        print("new category: ", new_category)
+        cur.execute("SELECT category FROM expenses WHERE id = ?",(expense_id,))
+        current_category = cur.fetchone()[0]
+        print("Current category: ",current_category)
+        if current_category == new_category:
+            while True:
+                duplicated_case = input("Selected category is alrady the category for the expense. Would you like to continie anyway? 'Y' | 'N'").lower().strip()
+                match duplicated_case:
+                    case 'y' | 'yes':
+                        cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+                        break
+                    case 'n' | 'no':
+                        print("Returning to the previous menu. Select a new category")
+                        new_category = ''
+                        break
+        else:
+            cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+
+    print("Category was updated succesfully")
+    
+    db.commit()
+    db.close()
+
+# def modify_description():
+
+# def modify_amount():
 
 create_database()
 
@@ -118,15 +216,15 @@ while True:
     4. Show total spent
     5. Exit
     {'*' * 30}
-    Option: """)
+    Option: """).strip()
 
     match opt:
         case '1':
             print("Add new expense:")
             add_expense()
         case '2':
-            print("Modify an expense")
-             
+            print("Modify expense menu")
+            modify_expense()
         case '3': 
             print("Show all expenses")
             show_all_expenses()
