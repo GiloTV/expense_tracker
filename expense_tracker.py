@@ -61,17 +61,7 @@ def add_expense():
                 category = ''
 
     description = input("Add a little description about the expense: ")
-
-    while True:
-        amount = input("Insert the amount of the expense: ")
-        try:
-            amount = int(amount)
-            if amount <= 0:
-                print("Insert amount again. Amount must be higher than 0")
-                continue
-            break
-        except ValueError:
-            print("Invalid amount. Please type a number")
+    amount = input_number("amount")
 
     new_expense = (expense_date, category, description, amount)
     insert_expense(new_expense)
@@ -111,18 +101,19 @@ def calculate_total_spent():
 
 def modify_expense():
     show_all_expenses()
-    while True:
-        expense_id = input("Insert the expense ID that will be modified: ")
-        try:
-            expense_id = int(expense_id)
-            if expense_id <= 0:
-                print("Expense id not valid, ID's must be higher than 0 and positive numbers")
-                continue
-            break
-        except ValueError:
-                    print("Invalid amount. Please type a number")
+    
+    expense_id = input_number("id")
+    
 
 
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    cur.execute("SELECT * from expenses WHERE id = ?",(expense_id,))
+    res = cur.fetchall()
+    if res == []:
+        print("No expense found with that ID try again!")
+        
+    
     
     while True:
         modify_option = input(f"""
@@ -212,6 +203,19 @@ def modify_category(expense_id):
 # def modify_description():
 
 # def modify_amount():
+
+def input_number(action):
+        while True:
+            num = input(f"Insert the {action} of the expense")
+            try:
+                num = int(num)
+                if num <= 0:
+                    print("Number not valid. Must be higher than 0")
+                    continue
+                return num
+            except ValueError:
+                        print("Input value not a number. Please type a number")
+        
 
 create_database()
 
