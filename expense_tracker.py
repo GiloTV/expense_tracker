@@ -101,23 +101,23 @@ def modify_expense():
     cur = db.cursor()
     show_all_expenses()
 
-    expense_data = []
+    expense_data = ''
     while not expense_data:
         expense_id = input_number("id")
         cur.execute("SELECT * from expenses WHERE id = ?",(expense_id,))
-        expense_data = [cur.fetchone()]
+        expense_data = cur.fetchone()
         if expense_data:
             print("Expense found, printing data...")
-            for exp_id, date, category, description, amount in expense_data:
-                print(f"""
-                    {'='*25} 
-                    Expense details
-                    expense: {exp_id}
-                    expense date: {date}
-                    category: {category}
-                    description: {description}
-                    amount: {amount}
-                    {'='*25}""")
+            exp_id, date, category, description, amount = expense_data
+            print(f"""
+                {'='*25} 
+                Expense details
+                expense: {exp_id}
+                expense date: {date}
+                category: {category}
+                description: {description}
+                amount: {amount}
+                {'='*25}""")
         else:
             print("Expense not found try again")
         
@@ -206,7 +206,7 @@ def modify_category(expense_id):
     db.commit()
     db.close()
 
-def modify_description():
+def modify_description(expense_id):
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
 
