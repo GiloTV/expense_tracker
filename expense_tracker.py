@@ -5,7 +5,7 @@ def create_database():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
 
-    # Expense table definition. Stores expenses id, the expense date, expense category, description and amount of the stored expenses 
+    # Expense table definition. Stores expenses id, date, category, description and amount of the stored expenses 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,33 +38,11 @@ def insert_expense(data):
 
 def add_expense():
     expense_date = datetime.today().strftime('%Y-%m-%d')
-    category = ''
-    while not category:
-        category = input("""
-            Insert the category of the expense
-            1.- Service
-            2.- Food
-            3.- Emergency
-            4.- Hobby
-        """)
-        match category:
-            case '1':
-                category = 'Service'
-            case '2':
-                category = 'Food'
-            case '3':
-                category = 'Emergency'
-            case '4':
-                category = 'Hobby' 
-            case _:
-                print('No category selected. Try again')
-                category = ''
-
+    category = category_selector()
     description = input("Add a little description about the expense: ")
     amount = input_number("amount")
-
-    new_expense = (expense_date, category, description, amount)
-    insert_expense(new_expense)
+    expense_data = (expense_date, category, description, amount)
+    insert_expense(expense_data)
 
 def show_all_expenses():
     db = sqlite3.connect("expense_tracker.db")
@@ -149,6 +127,7 @@ def modify_expense():
                 break
             case _:
                 print("Invalid Option. Try again")
+    
 
 def modify_date(expense_id):
     db = sqlite3.connect("expense_tracker.db")
@@ -163,45 +142,25 @@ def modify_date(expense_id):
 def modify_category(expense_id):
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
-    new_category = ''
-    # Categories menu option to modify the category of a expense
-    while not new_category:
-        new_category = input("""
-            Insert the new category for the expense
-            1.- Service
-            2.- Food
-            3.- Emergency
-            4.- Hobby
-        """)
-        match new_category:
-            case '1':
-                new_category = 'Service'
-            case '2':
-                new_category = 'Food'
-            case '3':
-                new_category = 'Emergency'
-            case '4':
-                new_category = 'Hobby' 
-            case _:
-                print('No category selected. Try again')
-
-        print("new category: ", new_category)
-        cur.execute("SELECT category FROM expenses WHERE id = ?",(expense_id,))
-        current_category = cur.fetchone()[0]
-        print("Current category: ",current_category)
-        if current_category == new_category:
-            while True:
-                duplicated_case = input("Selected category is alrady the category for the expense. Would you like to continie anyway? 'Y' | 'N'").lower().strip()
-                match duplicated_case:
-                    case 'y' | 'yes':
-                        cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
-                        break
-                    case 'n' | 'no':
-                        print("Returning to the previous menu. Select a new category")
-                        new_category = ''
-                        break
-        else:
-            cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+    new_category = category_selector()
+    print("new category: ", new_category)
+    cur.execute("SELECT category FROM expenses WHERE id = ?",(expense_id,))
+    current_category = cur.fetchone()[0]
+    print("Current category: ",current_category)
+    # Handle the case where modified category is same as the old category 
+    if current_category == new_category:
+        while True:
+            duplicated_case = input("Selected category is alrady the category for the expense. Would you like to continie anyway? 'Y' | 'N'").lower().strip()
+            match duplicated_case:
+                case 'y' | 'yes':
+                    cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+                    break
+                case 'n' | 'no':
+                    print("Returning to the previous menu. Select a new category")
+                    new_category = ''
+                    break
+    else:
+        cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
     print("Category was updated! :D")
     
     db.commit()
@@ -226,6 +185,7 @@ def modify_amount(expense_id):
     db.commit()
     db.close()
 
+# Returns valid numbers for amount and categories menu selector
 def input_number(action):
         while True:
             num = input(f"Insert the {action} of the expense\n -> ")
@@ -237,8 +197,33 @@ def input_number(action):
                 return num
             except ValueError:
                         print("Input value not a number. Please type a number")
-        
 
+# Returns the category of the expense
+def category_selector():
+    category = ''
+    # Categories menu option selector
+    while not category:
+        category = input("""
+            Insert the new category for the expense
+            1.- Service
+            2.- Food
+            3.- Emergency
+            4.- Hobby
+        """)
+        match category:
+            case '1':
+                category = 'Service'
+            case '2':
+                category = 'Food'
+            case '3':
+                category = 'Emergency'
+            case '4':
+                category = 'Hobby' 
+            case _:
+                print('No category selected. Try again')
+                category = ''
+    return category
+        
 create_database()
 
 while True:
