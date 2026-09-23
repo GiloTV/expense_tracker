@@ -1,6 +1,7 @@
 from datetime import datetime
 import sqlite3
 
+
 def create_database():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
@@ -39,13 +40,11 @@ def insert_expense(data):
 def add_expense():
     expense_date = datetime.today().strftime('%Y-%m-%d')
     category = category_selector()
-    description = ''
-    while not description:
-        description = input("Add a little description about the expense: ")
-        if not description:
-            print("Description must be provided. Try again")
-        else:
+    while True:
+        description = input("Add a little description about the expense: ").strip()
+        if description:
             break
+        print("Description must be provided. Try again")
     amount = input_number("amount")
     expense_data = (expense_date, category, description, amount)
     insert_expense(expense_data)
@@ -55,24 +54,28 @@ def show_all_expenses():
     cur = db.cursor()
     res = cur.execute("SELECT * FROM expenses")
     expenses = res.fetchall()
-    for expense_id, expense_date, category, description, amount in expenses:
-        print(f"""
-        {'='*25} 
-        Expense details
-        expense: {expense_id}
-        expense date: {expense_date}
-        category: {category}
-        description: {description}
-        amount: {amount}
-        {'='*25}""")
-
-    db.close()
+    if not expenses:
+        print("There are no expenses to show")
+        db.close()
+    else: 
+        for expense_id, expense_date, category, description, amount in expenses:
+            print(f"""
+            {'='*25} 
+            Expense details
+            expense: {expense_id}
+            expense date: {expense_date}
+            category: {category}
+            description: {description}
+            amount: {amount}
+            {'='*25}""")
+        db.close()
 
 def calculate_total_spent():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
     res = cur.execute("SELECT SUM(amount) FROM expenses")
-    print(res)
+    total_spent = res.fetchone()[0]
+    print(total_spent)
     db.close()
 
 def modify_expense():  
@@ -151,29 +154,29 @@ def modify_category(expense_id):
     # Handle the case where modified category is same as the old category 
     if current_category == new_category:
         while True:
-            duplicated_case = input("Selected category is alrady the category for the expense. Would you like to continie anyway? 'Y' | 'N'").lower().strip()
-            match duplicated_case:
-                case 'y' | 'yes':
-                    cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
-                    print("Category was updated! :D")
-                    break
-                case 'n' | 'no':
-                    print("Returning to the previous menu. Select a new category")
-                    new_category = ''
-                    break
-                case _:
-                    print("No valid option only yes | y or no | n")
+            confirmation = input("Selected category is alrady the category for the expense. Would you like to continie anyway? 'Y' | 'N' \n -> ").lower().strip()
+            if confirmation in ('y', 'yes'):
+                cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+                db.commit()
+                print("Category was updated! :D")
+                db.close()
+                break
+            if confirmation in ('n', 'no'):
+                print("Category selection cancelled")
+                db.close()
+                break
+            print("Please select a valid option")
     else:
         cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
-    
-    
-    db.commit()
-    db.close()
 
 def modify_description(expense_id):
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
-    new_description = input("Insert the new description of the expense \n -> ")
+    while True:
+        new_description = input("Insert the new description of the expense \n -> ").strip()
+        if new_description:
+            break
+        print("Description must be provided. Try again")
     cur.execute("UPDATE expenses SET description = ? WHERE id = ?",(new_description, expense_id))
     print("Description was updated! :D")
     db.commit()
@@ -193,20 +196,40 @@ def delete_expense():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
 
-    expense_data = ''
-    while not expense_data:
-        expense_id = input_number("id")
-        cur.execute("SELECT * from expenses WHERE id = ?",(expense_id,))
+    while True:
+        expense_id = input_number("ID")
+        cur.execute("SELECT * FROM expenses WHERE id = ?",(expense_id,))
         expense_data = cur.fetchone()
-        if expense_data:
-            cur.execute("DELETE FROM expenses WHERE id = ?",(expense_id,))
-            print("Expense deleted succesfully")
-        else:
-            print("No expense found. Try again")
 
-    db.commit()
-    db.close()
+        if not expense_data:
+            print("No expense found with that ID. Please try again")
+            continue
 
+        expense_id, date, category, description, amount = expense_data
+        print("Expense for deleting, printing data...")
+        print(f"""
+            {'='*25} 
+            Expense details
+            expense: {expense_id}
+            expense date: {date}
+            category: {category}
+            description: {description}
+            amount: {amount}
+            {'='*25}""")
+        while True:
+            confirmation = input("Delete this expense Y/N").lower().strip()
+            if confirmation in ("y", "yes"):
+                cur.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+                db.commit()
+                print("Expense deleted successfully")
+                db.close()
+                return
+            if confirmation in ("n", "no"):
+                print("Expense deletion cancelled")
+                db.close()
+                return
+            print("Please type yes or no")
+            
 # Returns valid numbers for amount and categories menu selector
 def input_number(action):
         while True:
@@ -277,7 +300,7 @@ while True:
             print('Delete expense')
             delete_expense()
         case '6':
-            print('Option number 5, Goodbye')
+            print('Goodbye')
             break
         case _:
             print('Invalid option, try again')
