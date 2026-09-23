@@ -39,7 +39,13 @@ def insert_expense(data):
 def add_expense():
     expense_date = datetime.today().strftime('%Y-%m-%d')
     category = category_selector()
-    description = input("Add a little description about the expense: ")
+    description = ''
+    while not description:
+        description = input("Add a little description about the expense: ")
+        if not description:
+            print("Description must be provided. Try again")
+        else:
+            break
     amount = input_number("amount")
     expense_data = (expense_date, category, description, amount)
     insert_expense(expense_data)
@@ -65,14 +71,8 @@ def show_all_expenses():
 def calculate_total_spent():
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
-    res = cur.execute("SELECT amount FROM expenses")
-
-    amounts = res.fetchall()
-    total = 0
-    for amount in amounts:
-        total += amount[0]
-
-    print(total)
+    res = cur.execute("SELECT SUM(amount) FROM expenses")
+    print(res)
     db.close()
 
 def modify_expense():  
@@ -189,6 +189,24 @@ def modify_amount(expense_id):
     db.commit()
     db.close()
 
+def delete_expense():
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+
+    expense_data = ''
+    while not expense_data:
+        expense_id = input_number("id")
+        cur.execute("SELECT * from expenses WHERE id = ?",(expense_id,))
+        expense_data = cur.fetchone()
+        if expense_data:
+            cur.execute("DELETE FROM expenses WHERE id = ?",(expense_id,))
+            print("Expense deleted succesfully")
+        else:
+            print("No expense found. Try again")
+
+    db.commit()
+    db.close()
+
 # Returns valid numbers for amount and categories menu selector
 def input_number(action):
         while True:
@@ -237,7 +255,8 @@ while True:
     2. Modify expense
     3. Show all expenses
     4. Show total spent
-    5. Exit
+    5. Delete expense
+    6. Exit
     {'*' * 30}
     Option: """).strip()
 
@@ -255,6 +274,9 @@ while True:
             print("Show total spent")
             calculate_total_spent()
         case '5':
+            print('Delete expense')
+            delete_expense()
+        case '6':
             print('Option number 5, Goodbye')
             break
         case _:
