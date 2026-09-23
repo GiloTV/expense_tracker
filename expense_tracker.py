@@ -140,13 +140,15 @@ def modify_expense():
                 modify_category(expense_id)
             case '3':
                 print("Modify description")
+                modify_description(expense_id)
             case '4':
                 print("Modify amount")
+                modify_amount(expense_id)
             case '5':
                 print("Back to main menu")
                 break
             case _:
-                print("Try again")
+                print("Invalid Option. Try again")
 
 def modify_date(expense_id):
     db = sqlite3.connect("expense_tracker.db")
@@ -200,8 +202,7 @@ def modify_category(expense_id):
                         break
         else:
             cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
-
-    print("Category was updated succesfully")
+    print("Category was updated! :D")
     
     db.commit()
     db.close()
@@ -209,13 +210,25 @@ def modify_category(expense_id):
 def modify_description(expense_id):
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
+    new_description = input("Insert the new description of the expense \n -> ")
+    cur.execute("UPDATE expenses SET description = ? WHERE id = ?",(new_description, expense_id))
+    print("Description was updated! :D")
+    db.commit()
+    db.close()
 
 
-# def modify_amount():
+def modify_amount(expense_id):
+    db = sqlite3.connect("expense_tracker.db")
+    cur = db.cursor()
+    new_amount = input_number("amount")
+    cur.execute("UPDATE expenses SET amount = ? WHERE id = ?", (new_amount, expense_id))
+    print("Amount was updated! :D")
+    db.commit()
+    db.close()
 
 def input_number(action):
         while True:
-            num = input(f"Insert the {action} of the expense")
+            num = input(f"Insert the {action} of the expense\n -> ")
             try:
                 num = int(num)
                 if num <= 0:
