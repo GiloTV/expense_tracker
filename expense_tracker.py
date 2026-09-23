@@ -73,12 +73,12 @@ def calculate_total_spent():
         total += amount[0]
 
     print(total)
+    db.close()
 
 def modify_expense():  
     db = sqlite3.connect("expense_tracker.db")
     cur = db.cursor()
     show_all_expenses()
-
     expense_data = ''
     while not expense_data:
         expense_id = input_number("id")
@@ -127,6 +127,7 @@ def modify_expense():
                 break
             case _:
                 print("Invalid Option. Try again")
+    db.close()
     
 
 def modify_date(expense_id):
@@ -154,14 +155,17 @@ def modify_category(expense_id):
             match duplicated_case:
                 case 'y' | 'yes':
                     cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
+                    print("Category was updated! :D")
                     break
                 case 'n' | 'no':
                     print("Returning to the previous menu. Select a new category")
                     new_category = ''
                     break
+                case _:
+                    print("No valid option only yes | y or no | n")
     else:
         cur.execute("UPDATE expenses SET category = ? WHERE id = ?",(new_category, expense_id))
-    print("Category was updated! :D")
+    
     
     db.commit()
     db.close()
